@@ -1,0 +1,121 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "default",
+      "displayName": "Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "GONX_BUILD_TESTS": "ON",
+        "GONX_ENABLE_SANITIZERS": "ON"
+      }
+    },
+    {
+      "name": "relwithdebinfo",
+      "inherits": "default",
+      "displayName": "RelWithDebInfo",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "GONX_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "default",
+      "displayName": "Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "GONX_BUILD_TESTS": "OFF",
+        "GONX_WARNINGS_AS_ERRORS": "ON",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+      }
+    },
+    {
+      "name": "ci-linux",
+      "inherits": "default",
+      "displayName": "CI Linux",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "GONX_BUILD_TESTS": "ON",
+        "GONX_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "ci-windows",
+      "inherits": "default",
+      "displayName": "CI Windows",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "GONX_BUILD_TESTS": "ON",
+        "GONX_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "ci-macos",
+      "inherits": "default",
+      "displayName": "CI macOS",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "GONX_BUILD_TESTS": "ON",
+        "GONX_WARNINGS_AS_ERRORS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "relwithdebinfo",
+      "configurePreset": "relwithdebinfo"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "ci-linux",
+      "configurePreset": "ci-linux"
+    },
+    {
+      "name": "ci-windows",
+      "configurePreset": "ci-windows"
+    },
+    {
+      "name": "ci-macos",
+      "configurePreset": "ci-macos"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ci-linux",
+      "configurePreset": "ci-linux",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

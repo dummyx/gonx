@@ -1,0 +1,48 @@
+# Build directories
+build/
+out/
+cmake-build-*/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cache/
+
+# Compiled objects
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+*.pdb
+*.exp
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+install_manifest.txt
+CTestTestfile.cmake
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Godot
+.godot/
+*.import
+
+# ONNX Runtime downloaded artifacts
+ort_package/
+
+# Distribution
+dist/
+*.zip
+*.tar.gz

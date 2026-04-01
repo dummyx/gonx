@@ -1,0 +1,27 @@
+[configuration]
+
+entry_symbol = "gonx_library_init"
+compatibility_minimum = "4.6"
+reloadable = true
+
+[libraries]
+
+linux.debug.x86_64 = "res://addons/gonx/bin/libgonx.so"
+linux.release.x86_64 = "res://addons/gonx/bin/libgonx.so"
+linux.debug.arm64 = "res://addons/gonx/bin/libgonx.so"
+linux.release.arm64 = "res://addons/gonx/bin/libgonx.so"
+windows.debug.x86_64 = "res://addons/gonx/bin/gonx.dll"
+windows.release.x86_64 = "res://addons/gonx/bin/gonx.dll"
+macos.debug = "res://addons/gonx/bin/libgonx.dylib"
+macos.release = "res://addons/gonx/bin/libgonx.dylib"
+
+[dependencies]
+
+linux.debug.x86_64 = {"res://addons/gonx/bin/libonnxruntime.so": ""}
+linux.release.x86_64 = {"res://addons/gonx/bin/libonnxruntime.so": ""}
+linux.debug.arm64 = {"res://addons/gonx/bin/libonnxruntime.so": ""}
+linux.release.arm64 = {"res://addons/gonx/bin/libonnxruntime.so": ""}
+windows.debug.x86_64 = {"res://addons/gonx/bin/onnxruntime.dll": ""}
+windows.release.x86_64 = {"res://addons/gonx/bin/onnxruntime.dll": ""}
+macos.debug = {"res://addons/gonx/bin/libonnxruntime.dylib": ""}
+macos.release = {"res://addons/gonx/bin/libonnxruntime.dylib": ""}

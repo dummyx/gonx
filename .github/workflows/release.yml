@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Create Release
+    needs: [build]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download addon artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gonx-addon
+          path: dist/
+
+      - name: Create archive
+        run: |
+          cd dist && zip -r ../gonx-${{ github.ref_name }}.zip .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: gonx-${{ github.ref_name }}.zip
+          generate_release_notes: true
