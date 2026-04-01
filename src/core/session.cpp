@@ -223,7 +223,8 @@ const std::filesystem::path& InferenceSession::model_path() const noexcept {
     return impl_->model_path;
 }
 
-Result<std::vector<Ort::Value>> InferenceSession::run(std::vector<Ort::Value>& inputs) {
+Result<std::vector<Ort::Value>> InferenceSession::run(std::vector<Ort::Value>& inputs,
+                                                      Ort::RunOptions* run_options) {
     if (!is_loaded()) {
         return Error::make(ErrorCode::SessionNotLoaded,
                            "No model is loaded. Call load() first.");
@@ -237,8 +238,10 @@ Result<std::vector<Ort::Value>> InferenceSession::run(std::vector<Ort::Value>& i
     }
 
     try {
+        Ort::RunOptions default_run_options{nullptr};
+        auto* effective_run_options = run_options != nullptr ? run_options : &default_run_options;
         auto results = impl_->session->Run(
-            Ort::RunOptions{nullptr},
+            *effective_run_options,
             impl_->input_name_ptrs.data(),
             inputs.data(),
             inputs.size(),

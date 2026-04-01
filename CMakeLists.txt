@@ -84,6 +84,21 @@ set_target_properties(gonx PROPERTIES
     DEBUG_POSTFIX ""
 )
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set_target_properties(gonx PROPERTIES
+        BUILD_RPATH "\$ORIGIN"
+        INSTALL_RPATH "\$ORIGIN"
+        BUILD_WITH_INSTALL_RPATH ON
+        BUILD_RPATH_USE_ORIGIN ON
+    )
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set_target_properties(gonx PROPERTIES
+        BUILD_RPATH "@loader_path"
+        INSTALL_RPATH "@loader_path"
+        BUILD_WITH_INSTALL_RPATH ON
+    )
+endif()
+
 # Platform-specific suffix handling
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set_target_properties(gonx PROPERTIES

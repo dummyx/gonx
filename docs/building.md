@@ -13,14 +13,14 @@ GitHub releases. No manual ORT installation is required.
 ## Quick Start
 
 ```bash
-# Configure (debug build with tests and sanitizers)
-cmake --preset debug
+# Configure (RelWithDebInfo is the safest preset for loading inside Godot)
+cmake --preset relwithdebinfo
 
 # Build
-cmake --build --preset debug --parallel
+cmake --build --preset relwithdebinfo --parallel
 
 # Run tests
-cd build/debug && ctest --output-on-failure
+cd build/relwithdebinfo && ctest --output-on-failure
 ```
 
 ## Available Presets
@@ -70,11 +70,15 @@ After building, copy the shared library and ORT runtime library into the
 example project's addon directory:
 
 ```bash
-cp build/debug/libgonx.so example/addons/gonx/bin/
-cp build/debug/libonnxruntime* example/addons/gonx/bin/
+cp build/relwithdebinfo/libgonx.so example/addons/gonx/bin/
+cp build/relwithdebinfo/libonnxruntime* example/addons/gonx/bin/
 ```
 
 Then open the example project in Godot 4.6.
+
+For Flatpak-installed Godot on Linux, prefer `relwithdebinfo` or `release`.
+The `debug` preset enables sanitizers, which adds runtime dependencies that are
+often unavailable inside the Flatpak sandbox.
 
 ## Cross-platform Notes
 
@@ -88,4 +92,6 @@ same directory or in the addon bin/ path.
 
 ### Linux
 The build produces `libgonx.so`. ONNX Runtime `.so` files (including versioned
-symlinks) must be in the same directory or on `LD_LIBRARY_PATH`.
+symlinks) must be in the same directory or on `LD_LIBRARY_PATH`. `gonx` now
+sets its runtime search path to `$ORIGIN`, so placing the ORT libraries beside
+`libgonx.so` is the recommended layout for Godot addons.

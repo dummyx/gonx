@@ -11,9 +11,14 @@ Models generated:
   - int64_add.onnx: f(A[2], B[2]) -> C[2] = A + B  (int64)
 """
 
+from pathlib import Path
+
 import numpy as np
 import onnx
 from onnx import TensorProto, helper
+
+
+OUTPUT_DIR = Path(__file__).resolve().parent
 
 
 def make_add_floats():
@@ -26,7 +31,7 @@ def make_add_floats():
     model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 17)])
     model.producer_name = "gonx-test-gen"
     onnx.checker.check_model(model)
-    onnx.save(model, "add_floats.onnx")
+    onnx.save(model, OUTPUT_DIR / "add_floats.onnx")
     print("  Created add_floats.onnx")
 
 
@@ -39,7 +44,7 @@ def make_identity_float():
     model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 17)])
     model.producer_name = "gonx-test-gen"
     onnx.checker.check_model(model)
-    onnx.save(model, "identity_float.onnx")
+    onnx.save(model, OUTPUT_DIR / "identity_float.onnx")
     print("  Created identity_float.onnx")
 
 
@@ -52,7 +57,7 @@ def make_dynamic_batch():
     model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 17)])
     model.producer_name = "gonx-test-gen"
     onnx.checker.check_model(model)
-    onnx.save(model, "dynamic_batch.onnx")
+    onnx.save(model, OUTPUT_DIR / "dynamic_batch.onnx")
     print("  Created dynamic_batch.onnx")
 
 
@@ -66,7 +71,7 @@ def make_int64_add():
     model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 17)])
     model.producer_name = "gonx-test-gen"
     onnx.checker.check_model(model)
-    onnx.save(model, "int64_add.onnx")
+    onnx.save(model, OUTPUT_DIR / "int64_add.onnx")
     print("  Created int64_add.onnx")
 
 

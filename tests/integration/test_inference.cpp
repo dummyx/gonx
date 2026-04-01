@@ -182,3 +182,33 @@ TEST_CASE("Inference: dynamic batch with different batch sizes", "[inference]") 
         CHECK(out_shape[1] == 3);
     }
 }
+
+TEST_CASE("Inference: explicit RunOptions are accepted", "[inference]") {
+    auto path = fixtures_dir() / "identity_float.onnx";
+    if (!std::filesystem::exists(path)) {
+        SKIP("Test fixture not found: " << path);
+    }
+
+    InferenceSession session;
+    REQUIRE(session.load(path).has_value());
+
+    std::array<float, 4> data = {9.0f, 8.0f, 7.0f, 6.0f};
+    std::array<int64_t, 2> shape = {1, 4};
+
+    auto tensor = create_float_tensor(data, shape);
+    REQUIRE(tensor.has_value());
+
+    std::vector<Ort::Value> inputs;
+    inputs.push_back(std::move(tensor).value());
+
+    Ort::RunOptions run_options{nullptr};
+    auto result = session.run(inputs, &run_options);
+    REQUIRE(result.has_value());
+    REQUIRE(result.value().size() == 1);
+
+    const float* out_data = result.value()[0].GetTensorData<float>();
+    CHECK_THAT(out_data[0], Catch::Matchers::WithinAbs(9.0, 1e-6));
+    CHECK_THAT(out_data[1], Catch::Matchers::WithinAbs(8.0, 1e-6));
+    CHECK_THAT(out_data[2], Catch::Matchers::WithinAbs(7.0, 1e-6));
+    CHECK_THAT(out_data[3], Catch::Matchers::WithinAbs(6.0, 1e-6));
+}

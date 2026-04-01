@@ -57,7 +57,9 @@ public:
     /// Run synchronous inference.
     /// `inputs` must contain one Ort::Value per model input, in order.
     /// Returns one Ort::Value per model output on success.
-    [[nodiscard]] Result<std::vector<Ort::Value>> run(std::vector<Ort::Value>& inputs);
+    [[nodiscard]] Result<std::vector<Ort::Value>> run(
+        std::vector<Ort::Value>& inputs,
+        Ort::RunOptions* run_options = nullptr);
 
     /// Get the path of the currently loaded model.
     [[nodiscard]] const std::filesystem::path& model_path() const noexcept;

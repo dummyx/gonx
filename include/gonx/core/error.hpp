@@ -14,6 +14,7 @@ enum class ErrorCode {
     InvalidType,
     SessionNotLoaded,
     InferenceFailed,
+    Cancelled,
     ProviderNotAvailable,
     InternalError,
 };
