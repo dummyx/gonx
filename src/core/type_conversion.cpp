@@ -87,10 +87,11 @@ Result<Ort::Value> create_float_tensor(std::span<const float> data,
         return status.error();
     }
 
-    auto mem_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-    return Ort::Value::CreateTensor<float>(
-        mem_info, const_cast<float*>(data.data()), data.size(),
-        shape.data(), shape.size());
+    Ort::AllocatorWithDefaultOptions allocator;
+    auto tensor = Ort::Value::CreateTensor(
+        allocator, shape.data(), shape.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT);
+    std::memcpy(tensor.GetTensorMutableData<float>(), data.data(), data.size_bytes());
+    return tensor;
 }
 
 Result<Ort::Value> create_int64_tensor(std::span<const int64_t> data,
@@ -100,10 +101,11 @@ Result<Ort::Value> create_int64_tensor(std::span<const int64_t> data,
         return status.error();
     }
 
-    auto mem_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-    return Ort::Value::CreateTensor<int64_t>(
-        mem_info, const_cast<int64_t*>(data.data()), data.size(),
-        shape.data(), shape.size());
+    Ort::AllocatorWithDefaultOptions allocator;
+    auto tensor = Ort::Value::CreateTensor(
+        allocator, shape.data(), shape.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64);
+    std::memcpy(tensor.GetTensorMutableData<int64_t>(), data.data(), data.size_bytes());
+    return tensor;
 }
 
 Result<Ort::Value> create_bool_tensor(std::span<const uint8_t> data,
@@ -113,12 +115,14 @@ Result<Ort::Value> create_bool_tensor(std::span<const uint8_t> data,
         return status.error();
     }
 
-    // ORT bool tensors use bool internally; convert from uint8_t
-    auto mem_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-    // NOLINTNEXTLINE: reinterpret_cast needed for ORT's bool tensor API
-    return Ort::Value::CreateTensor<bool>(
-        mem_info, reinterpret_cast<bool*>(const_cast<uint8_t*>(data.data())), data.size(),
-        shape.data(), shape.size());
+    Ort::AllocatorWithDefaultOptions allocator;
+    auto tensor = Ort::Value::CreateTensor(
+        allocator, shape.data(), shape.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL);
+    bool* destination = tensor.GetTensorMutableData<bool>();
+    for (std::size_t index = 0; index < data.size(); ++index) {
+        destination[index] = data[index] != 0;
+    }
+    return tensor;
 }
 
 std::vector<int64_t> get_tensor_shape(const Ort::Value& value) {
