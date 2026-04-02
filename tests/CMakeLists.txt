@@ -28,20 +28,7 @@ add_executable(gonx_unit_tests
 
 target_link_libraries(gonx_unit_tests PRIVATE
     Catch2::Catch2WithMain
-    onnxruntime::onnxruntime
-)
-
-target_include_directories(gonx_unit_tests PRIVATE
-    "${CMAKE_SOURCE_DIR}/include"
-    "${CMAKE_SOURCE_DIR}/src"
-)
-
-# Link against gonx core sources directly (avoid needing Godot for unit tests)
-target_sources(gonx_unit_tests PRIVATE
-    "${CMAKE_SOURCE_DIR}/src/core/tensor_spec.cpp"
-    "${CMAKE_SOURCE_DIR}/src/core/provider.cpp"
-    "${CMAKE_SOURCE_DIR}/src/core/type_conversion.cpp"
-    "${CMAKE_SOURCE_DIR}/src/core/environment.cpp"
+    gonx-core
 )
 
 target_compile_features(gonx_unit_tests PRIVATE cxx_std_20)
@@ -61,20 +48,7 @@ add_executable(gonx_integration_tests
 
 target_link_libraries(gonx_integration_tests PRIVATE
     Catch2::Catch2WithMain
-    onnxruntime::onnxruntime
-)
-
-target_include_directories(gonx_integration_tests PRIVATE
-    "${CMAKE_SOURCE_DIR}/include"
-    "${CMAKE_SOURCE_DIR}/src"
-)
-
-target_sources(gonx_integration_tests PRIVATE
-    "${CMAKE_SOURCE_DIR}/src/core/tensor_spec.cpp"
-    "${CMAKE_SOURCE_DIR}/src/core/provider.cpp"
-    "${CMAKE_SOURCE_DIR}/src/core/type_conversion.cpp"
-    "${CMAKE_SOURCE_DIR}/src/core/environment.cpp"
-    "${CMAKE_SOURCE_DIR}/src/core/session.cpp"
+    gonx-core
 )
 
 target_compile_features(gonx_integration_tests PRIVATE cxx_std_20)
