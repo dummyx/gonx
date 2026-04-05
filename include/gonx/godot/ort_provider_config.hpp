@@ -31,6 +31,9 @@ public:
     void set_optimized_model_path(const godot::String& path);
     godot::String get_optimized_model_path() const;
 
+    void set_device_id(int id);
+    int get_device_id() const;
+
     /// Build a core SessionConfig from this resource's state.
     [[nodiscard]] SessionConfig to_session_config() const;
 
@@ -42,6 +45,7 @@ protected:
 
 private:
     godot::String provider_ = "CPU";
+    int device_id_ = 0;
     int intra_op_threads_ = 0;
     int inter_op_threads_ = 0;
     int optimization_level_ = 99;

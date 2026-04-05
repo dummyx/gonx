@@ -13,6 +13,7 @@ include_guard(GLOBAL)
 
 set(GONX_ORT_VERSION "1.24.4" CACHE STRING "ONNX Runtime version")
 set(GONX_ORT_ROOT "" CACHE PATH "Path to pre-installed ONNX Runtime (skips download)")
+set(GONX_ORT_VARIANT "cpu" CACHE STRING "ORT package variant: cpu, cuda, migraphx")
 option(GONX_ORT_FROM_SOURCE "Build ONNX Runtime from source submodule" OFF)
 
 # Determine platform identifier for ORT release packages
@@ -125,14 +126,89 @@ function(_gonx_create_ort_target ORT_ROOT_DIR)
     message(STATUS "ONNX Runtime target created from: ${ORT_ROOT_DIR}")
 endfunction()
 
+# ── Build from source ────────────────────────────────────────────────────────
+# Uses the thirdparty/onnxruntime submodule. Heavy build (~20 min).
+# Provider selection is controlled via GONX_ORT_PROVIDERS (semicolon-separated).
+# Example: -DGONX_ORT_FROM_SOURCE=ON -DGONX_ORT_PROVIDERS="migraphx;cpu"
+set(GONX_ORT_PROVIDERS "cpu" CACHE STRING
+    "Semicolon-separated list of ORT providers to enable when building from source (cpu, cuda, migraphx, openvino)")
+
+function(_gonx_build_ort_from_source)
+    set(_ort_src "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/onnxruntime")
+    if(NOT EXISTS "${_ort_src}/tools/ci_build/build.py")
+        message(FATAL_ERROR
+            "thirdparty/onnxruntime submodule not populated. "
+            "Run: git submodule update --init thirdparty/onnxruntime")
+    endif()
+
+    set(_ort_build "${CMAKE_BINARY_DIR}/_deps/ort_build")
+    set(_ort_install "${CMAKE_BINARY_DIR}/_deps/ort_install")
+
+    # Map provider list to build.py flags
+    set(_build_flags
+        --build_dir "${_ort_build}"
+        --config ${CMAKE_BUILD_TYPE}
+        --build_shared_lib
+        --skip_tests
+        --parallel
+        --cmake_generator Ninja
+        --compile_no_warning_as_error
+    )
+
+    string(TOLOWER "${GONX_ORT_PROVIDERS}" _providers_lower)
+    if(_providers_lower MATCHES "cuda")
+        list(APPEND _build_flags --use_cuda)
+        message(STATUS "ORT from source: enabling CUDA provider")
+    endif()
+    if(_providers_lower MATCHES "migraphx")
+        list(APPEND _build_flags --use_migraphx)
+        message(STATUS "ORT from source: enabling MIGraphX provider")
+    endif()
+    if(_providers_lower MATCHES "openvino")
+        list(APPEND _build_flags --use_openvino)
+        message(STATUS "ORT from source: enabling OpenVINO provider")
+    endif()
+
+    set(_ort_cfg_dir "${_ort_build}/${CMAKE_BUILD_TYPE}")
+    if(NOT EXISTS "${_ort_cfg_dir}/libonnxruntime.so" AND NOT EXISTS "${_ort_cfg_dir}/libonnxruntime.dylib")
+        message(STATUS "Building ONNX Runtime from source (this may take a while)...")
+        execute_process(
+            COMMAND python3 "${_ort_src}/tools/ci_build/build.py" ${_build_flags}
+            RESULT_VARIABLE _build_result
+        )
+        if(NOT _build_result EQUAL 0)
+            message(FATAL_ERROR "ORT from-source build failed (exit ${_build_result})")
+        endif()
+    else()
+        message(STATUS "ORT from-source build already exists at ${_ort_cfg_dir}")
+    endif()
+
+    # Assemble an install layout that _gonx_create_ort_target expects.
+    file(MAKE_DIRECTORY "${_ort_install}/include" "${_ort_install}/lib")
+
+    # Copy public headers
+    file(GLOB _ort_headers "${_ort_src}/include/onnxruntime/core/session/*.h")
+    file(COPY ${_ort_headers} DESTINATION "${_ort_install}/include")
+    if(EXISTS "${_ort_src}/include/onnxruntime/core/providers")
+        file(COPY "${_ort_src}/include/onnxruntime/core/providers"
+             DESTINATION "${_ort_install}/include/core")
+    endif()
+
+    # Copy built shared libraries
+    file(GLOB _ort_libs "${_ort_cfg_dir}/libonnxruntime*")
+    file(COPY ${_ort_libs} DESTINATION "${_ort_install}/lib")
+    file(GLOB _ort_provider_libs "${_ort_cfg_dir}/libonnxruntime_providers_*")
+    if(_ort_provider_libs)
+        file(COPY ${_ort_provider_libs} DESTINATION "${_ort_install}/lib")
+    endif()
+
+    _gonx_create_ort_target("${_ort_install}")
+endfunction()
+
 # Main logic
 if(GONX_ORT_FROM_SOURCE)
-    message(FATAL_ERROR
-        "Building ONNX Runtime from source is not yet implemented. "
-        "Use pre-built packages via GONX_ORT_ROOT or automatic download.")
-endif()
-
-if(GONX_ORT_ROOT)
+    _gonx_build_ort_from_source()
+elseif(GONX_ORT_ROOT)
     # User provided an existing installation
     if(NOT EXISTS "${GONX_ORT_ROOT}/include")
         message(FATAL_ERROR "GONX_ORT_ROOT=${GONX_ORT_ROOT} does not contain an include/ directory")
@@ -143,7 +219,15 @@ else()
     _gonx_ort_platform_id(_plat)
     _gonx_ort_archive_ext(_ext)
 
-    set(_pkg_name "onnxruntime-${_plat}-${GONX_ORT_VERSION}")
+    # Build package name based on variant
+    string(TOLOWER "${GONX_ORT_VARIANT}" _variant)
+    if(_variant STREQUAL "cuda" OR _variant STREQUAL "gpu")
+        set(_pkg_name "onnxruntime-${_plat}-gpu-${GONX_ORT_VERSION}")
+    elseif(_variant STREQUAL "migraphx" OR _variant STREQUAL "rocm")
+        set(_pkg_name "onnxruntime-${_plat}-rocm-${GONX_ORT_VERSION}")
+    else()
+        set(_pkg_name "onnxruntime-${_plat}-${GONX_ORT_VERSION}")
+    endif()
     set(_download_url
         "https://github.com/microsoft/onnxruntime/releases/download/v${GONX_ORT_VERSION}/${_pkg_name}.${_ext}")
     set(_download_dir "${CMAKE_BINARY_DIR}/_deps/ort_package")

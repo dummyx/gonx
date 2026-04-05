@@ -54,6 +54,53 @@ cmake --preset debug -DGONX_ORT_ROOT=/path/to/onnxruntime
 
 The directory must contain `include/` and `lib/` subdirectories.
 
+## Building ONNX Runtime from Source
+
+GPU execution providers such as MiGraphX, CUDA, and OpenVINO are not
+included in the default pre-built ORT packages. To enable them, build
+ORT from source using the `thirdparty/onnxruntime` submodule:
+
+```bash
+# Populate the submodule
+git submodule update --init thirdparty/onnxruntime
+
+# Build with MiGraphX provider (requires ROCm stack)
+cmake --preset relwithdebinfo \
+  -DGONX_ORT_FROM_SOURCE=ON \
+  -DGONX_ORT_PROVIDERS="migraphx;cpu"
+
+cmake --build --preset relwithdebinfo --parallel
+```
+
+Available provider tokens for `GONX_ORT_PROVIDERS`:
+
+| Token | Build Flag | Requirement |
+|-------|-----------|-------------|
+| `cpu` | (always) | None |
+| `cuda` | `--use_cuda` | CUDA toolkit + NVIDIA GPU |
+| `migraphx` | `--use_migraphx` | ROCm stack + AMD GPU |
+| `openvino` | `--use_openvino` | OpenVINO toolkit |
+
+The from-source build takes approximately 20 minutes. The built ORT
+is cached in `build/<preset>/_deps/ort_build/` — subsequent CMake
+configures reuse it without rebuilding.
+
+### Provider library deployment
+
+From-source builds produce additional shared libraries for each
+enabled provider. For MiGraphX:
+
+```bash
+cp build/relwithdebinfo/libgonx.so example/addons/gonx/bin/
+cp build/relwithdebinfo/libonnxruntime*.so example/addons/gonx/bin/
+cp build/relwithdebinfo/libonnxruntime_providers_shared.so example/addons/gonx/bin/
+cp build/relwithdebinfo/libonnxruntime_providers_migraphx.so example/addons/gonx/bin/
+```
+
+The `.gdextension` manifest must list these provider libraries in
+its `[dependencies]` section so Godot loads them alongside the
+extension.
+
 ## Generating Test Fixtures
 
 Tests use small deterministic ONNX models. Generate them before running tests:

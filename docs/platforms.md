@@ -15,12 +15,25 @@
 |----------|--------|-------|
 | CPU | **Required** | Always available. Default provider. |
 | CUDA | Optional | Requires ORT built with CUDA EP + NVIDIA GPU + CUDA toolkit. |
+| MiGraphX | Optional | Linux only. Requires ORT built with MiGraphX EP + AMD GPU + ROCm stack. |
+| OpenVINO | Optional | Requires ORT built with OpenVINO EP + Intel hardware + OpenVINO toolkit. |
 | DirectML | Optional | Windows only. Requires ORT built with DML EP. |
 | CoreML | Optional | macOS/iOS only. Requires ORT built with CoreML EP. |
 
 The default pre-built ORT packages include only the CPU provider.
 GPU providers require either custom ORT builds or provider-specific
-ORT release packages from GitHub.
+ORT release packages from GitHub. Provider names are parsed
+case-insensitively — `"MiGraphX"`, `"migraphx"`, and `"MIGRAPHX"`
+all resolve to the MiGraphX execution provider.
+
+### MiGraphX Notes
+
+MiGraphX targets discrete AMD GPUs (MI-series, Instinct, RX 7000+).
+Integrated GPUs such as the Radeon 780M may load the provider but fail
+at kernel execution time. Running under Flatpak Godot requires extra
+steps because `/opt/rocm-*/lib` is outside the sandbox — use a native
+Godot binary with `LD_LIBRARY_PATH` set to the ROCm and AMDGPU library
+directories instead.
 
 ## ONNX Runtime Version
 

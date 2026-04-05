@@ -105,3 +105,54 @@ the optimized path skip graph optimization.
 - Use `optimization_level = 99` (default) for maximum graph optimization.
 - Consider a GPU execution provider for large models.
 - Profile with ONNX Runtime's built-in profiling if needed.
+
+## GPU Provider Issues
+
+### MiGraphX provider loads but inference fails
+
+```
+Failed to call function: MGXKernel_graph_main_graph_...
+```
+
+MiGraphX targets discrete AMD GPUs (MI-series, Instinct, RX 7000+).
+Integrated GPUs such as the Radeon 780M (RDNA 3 iGPU) can load the
+provider and compile graphs, but kernel execution fails at runtime.
+Verify your GPU is a supported discrete device.
+
+### MiGraphX missing shared libraries
+
+```
+libnuma.so.1: cannot open shared object file
+```
+
+The MiGraphX provider depends on ROCm libraries (`libmigraphx_c`,
+`libamdhip64`, `libhsa-runtime64`, `libnuma`, `libdrm_amdgpu`). These
+live under `/opt/rocm-*/lib` and `/opt/amdgpu/lib/`.
+
+For a native Godot binary, set `LD_LIBRARY_PATH`:
+
+```bash
+export LD_LIBRARY_PATH="/opt/rocm-7.2.0/lib:/opt/amdgpu/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}"
+```
+
+### MiGraphX fails under Flatpak Godot
+
+Flatpak sandboxes cannot access `/opt/rocm-*/lib`. Use a native Godot
+binary instead:
+
+```bash
+LD_LIBRARY_PATH="/opt/rocm-7.2.0/lib:/opt/amdgpu/lib/x86_64-linux-gnu" \
+  /path/to/Godot_v4.6.1-stable_linux.x86_64 --headless --path "$(pwd)" -s res://tools/check_extensions.gd
+```
+
+### Provider silently falls back to CPU
+
+If the configured provider string does not match any available provider,
+gonx falls back to CPU without error. Verify the provider is available:
+
+```gdscript
+print(OrtProviderConfig.get_available_providers())
+```
+
+Provider name parsing is case-insensitive: `"MiGraphX"`, `"migraphx"`,
+and `"MIGRAPHX"` all resolve correctly.

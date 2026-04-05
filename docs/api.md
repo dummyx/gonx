@@ -138,7 +138,7 @@ Configuration for ONNX Runtime session options. Can be saved as a Godot resource
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `provider` | `String` | `"CPU"` | Execution provider name. |
+| `provider` | `String` | `"CPU"` | Execution provider name. Accepted values: `"CPU"`, `"CUDA"`, `"MiGraphX"`, `"OpenVINO"`, `"DirectML"`, `"CoreML"`. Parsed case-insensitively. |
 | `intra_op_threads` | `int` | `0` | Threads for intra-op parallelism (0 = ORT default). |
 | `inter_op_threads` | `int` | `0` | Threads for inter-op parallelism (0 = ORT default). |
 | `optimization_level` | `int` | `99` | Graph optimization level (0=none, 1=basic, 2=extended, 99=all). |

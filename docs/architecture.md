@@ -91,13 +91,21 @@ All tensor creation is centralized in `type_conversion.hpp`. This is the
 only place that maps between flat data buffers and `Ort::Value`. Shape and
 type validation happen here before any ORT call.
 
-## Future Extension Points
+## Extension Points
 
-### Adding a GPU Provider
+### GPU Providers
+
+gonx supports multiple execution providers. CPU is always available.
+CUDA, MiGraphX, OpenVINO, DirectML, and CoreML are available when ORT
+is built with the corresponding provider enabled.
+
+Provider names are parsed case-insensitively in `provider.cpp`. The
+`OrtProviderConfig.provider` string maps to the internal enum, which
+drives session option configuration. Adding a new provider requires:
 
 1. Add the provider to the `ExecutionProvider` enum.
 2. Update `provider.cpp` to configure session options for it.
-3. Use provider-specific ORT packages or custom builds.
+3. Build ORT with the provider enabled (from source or pre-built package).
 4. No changes needed in the Godot layer — `OrtProviderConfig.provider`
    already accepts arbitrary strings.
 

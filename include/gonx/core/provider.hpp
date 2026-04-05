@@ -10,6 +10,8 @@ namespace gonx {
 enum class ExecutionProvider {
     CPU,
     CUDA,
+    MiGraphX,
+    OpenVINO,
     DirectML,
     CoreML,
 };
@@ -23,6 +25,7 @@ enum class ExecutionProvider {
 /// Configuration for session creation.
 struct SessionConfig {
     std::vector<ExecutionProvider> providers = {ExecutionProvider::CPU};
+    int device_id = 0;             // GPU device index for CUDA/MiGraphX
     int intra_op_num_threads = 0;  // 0 = ORT default
     int inter_op_num_threads = 0;
     int optimization_level = 99;   // ORT_ENABLE_ALL

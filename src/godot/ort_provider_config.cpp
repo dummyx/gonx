@@ -44,9 +44,18 @@ godot::String OrtProviderConfig::get_optimized_model_path() const {
     return optimized_model_path_;
 }
 
+void OrtProviderConfig::set_device_id(int id) {
+    device_id_ = id;
+}
+
+int OrtProviderConfig::get_device_id() const {
+    return device_id_;
+}
+
 SessionConfig OrtProviderConfig::to_session_config() const {
     SessionConfig config;
     config.providers = {parse_provider(provider_.utf8().get_data())};
+    config.device_id = device_id_;
     config.intra_op_num_threads = intra_op_threads_;
     config.inter_op_num_threads = inter_op_threads_;
     config.optimization_level = optimization_level_;
@@ -91,11 +100,17 @@ void OrtProviderConfig::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_optimized_model_path"),
                          &OrtProviderConfig::get_optimized_model_path);
 
+    ClassDB::bind_method(D_METHOD("set_device_id", "id"),
+                         &OrtProviderConfig::set_device_id);
+    ClassDB::bind_method(D_METHOD("get_device_id"),
+                         &OrtProviderConfig::get_device_id);
+
     ClassDB::bind_static_method("OrtProviderConfig",
                                 D_METHOD("get_available_providers"),
                                 &OrtProviderConfig::get_available_providers);
 
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "provider"), "set_provider", "get_provider");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "device_id"), "set_device_id", "get_device_id");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "intra_op_threads"), "set_intra_op_threads",
                  "get_intra_op_threads");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "inter_op_threads"), "set_inter_op_threads",

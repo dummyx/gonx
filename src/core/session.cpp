@@ -2,7 +2,9 @@
 #include "gonx/core/environment.hpp"
 #include "gonx/core/type_conversion.hpp"
 
+#include <algorithm>
 #include <sstream>
+#include <unordered_map>
 #include <utility>
 
 namespace gonx {
@@ -52,7 +54,75 @@ TensorSpec extract_tensor_spec(Ort::Session& session, std::size_t index, bool is
     return spec;
 }
 
-Ort::SessionOptions build_session_options(const SessionConfig& config) {
+bool is_provider_available(ExecutionProvider ep) {
+    auto ort_providers = Ort::GetAvailableProviders();
+    auto target = std::string(provider_name(ep));
+    return std::find(ort_providers.begin(), ort_providers.end(), target) != ort_providers.end();
+}
+
+Status append_provider(Ort::SessionOptions& options, ExecutionProvider ep, int device_id) {
+    if (!is_provider_available(ep)) {
+        std::ostringstream oss;
+        oss << "Execution provider '" << provider_name(ep)
+            << "' is not available in this ONNX Runtime build.";
+        return Error::make(ErrorCode::ProviderNotAvailable, oss.str());
+    }
+
+    try {
+        switch (ep) {
+        case ExecutionProvider::CPU:
+            // CPU is always the implicit fallback; explicitly requesting it is fine.
+            break;
+
+        case ExecutionProvider::CUDA: {
+            OrtCUDAProviderOptions cuda_opts{};
+            cuda_opts.device_id = device_id;
+            options.AppendExecutionProvider_CUDA(cuda_opts);
+            break;
+        }
+
+        case ExecutionProvider::MiGraphX: {
+            OrtMIGraphXProviderOptions migx_opts{};
+            migx_opts.device_id = device_id;
+            options.AppendExecutionProvider_MIGraphX(migx_opts);
+            break;
+        }
+
+        case ExecutionProvider::OpenVINO: {
+            std::unordered_map<std::string, std::string> ov_opts;
+            if (device_id > 0) {
+                ov_opts["device_id"] = std::to_string(device_id);
+            }
+            options.AppendExecutionProvider_OpenVINO_V2(ov_opts);
+            break;
+        }
+
+        case ExecutionProvider::DirectML: {
+            // DirectML uses the generic AppendExecutionProvider path
+            std::unordered_map<std::string, std::string> dml_opts;
+            dml_opts["device_id"] = std::to_string(device_id);
+            options.AppendExecutionProvider("DML", dml_opts);
+            break;
+        }
+
+        case ExecutionProvider::CoreML: {
+            // CoreML uses the generic AppendExecutionProvider path
+            std::unordered_map<std::string, std::string> coreml_opts;
+            options.AppendExecutionProvider("CoreML", coreml_opts);
+            break;
+        }
+        }
+    } catch (const Ort::Exception& e) {
+        std::ostringstream oss;
+        oss << "Failed to append execution provider '" << provider_name(ep)
+            << "': " << e.what();
+        return Error::make(ErrorCode::ProviderNotAvailable, oss.str());
+    }
+
+    return Status::ok();
+}
+
+Result<Ort::SessionOptions> build_session_options(const SessionConfig& config) {
     Ort::SessionOptions options;
 
     if (config.intra_op_num_threads > 0) {
@@ -88,6 +158,17 @@ Ort::SessionOptions build_session_options(const SessionConfig& config) {
 #else
         options.SetOptimizedModelFilePath(config.optimized_model_path.c_str());
 #endif
+    }
+
+    // Append execution providers (non-CPU ones before CPU fallback)
+    for (auto ep : config.providers) {
+        if (ep == ExecutionProvider::CPU) {
+            continue;
+        }
+        auto status = append_provider(options, ep, config.device_id);
+        if (status.has_error()) {
+            return status.error();
+        }
     }
 
     return options;
@@ -140,7 +221,11 @@ Status InferenceSession::load(const std::filesystem::path& model_path,
     }
 
     // Build session options
-    auto options = build_session_options(config);
+    auto options_result = build_session_options(config);
+    if (options_result.has_error()) {
+        return options_result.error();
+    }
+    auto options = std::move(options_result).value();
 
     // Create the ORT session
     try {

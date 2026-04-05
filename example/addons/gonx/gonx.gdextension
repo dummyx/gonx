@@ -17,10 +17,10 @@ macos.release = "res://addons/gonx/bin/libgonx.dylib"
 
 [dependencies]
 
-linux.debug.x86_64 = {"res://addons/gonx/bin/libonnxruntime.so": ""}
-linux.release.x86_64 = {"res://addons/gonx/bin/libonnxruntime.so": ""}
-linux.debug.arm64 = {"res://addons/gonx/bin/libonnxruntime.so": ""}
-linux.release.arm64 = {"res://addons/gonx/bin/libonnxruntime.so": ""}
+linux.debug.x86_64 = {"res://addons/gonx/bin/libonnxruntime.so": "", "res://addons/gonx/bin/libonnxruntime_providers_shared.so": "", "res://addons/gonx/bin/libonnxruntime_providers_migraphx.so": ""}
+linux.release.x86_64 = {"res://addons/gonx/bin/libonnxruntime.so": "", "res://addons/gonx/bin/libonnxruntime_providers_shared.so": "", "res://addons/gonx/bin/libonnxruntime_providers_migraphx.so": ""}
+linux.debug.arm64 = {"res://addons/gonx/bin/libonnxruntime.so": "", "res://addons/gonx/bin/libonnxruntime_providers_shared.so": ""}
+linux.release.arm64 = {"res://addons/gonx/bin/libonnxruntime.so": "", "res://addons/gonx/bin/libonnxruntime_providers_shared.so": ""}
 windows.debug.x86_64 = {"res://addons/gonx/bin/onnxruntime.dll": ""}
 windows.release.x86_64 = {"res://addons/gonx/bin/onnxruntime.dll": ""}
 macos.debug = {"res://addons/gonx/bin/libonnxruntime.dylib": ""}

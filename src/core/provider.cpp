@@ -3,8 +3,22 @@
 #include <onnxruntime_cxx_api.h>
 
 #include <algorithm>
+#include <cctype>
 
 namespace gonx {
+
+namespace {
+
+std::string to_lower(const std::string& s) {
+    std::string out;
+    out.reserve(s.size());
+    for (char c : s) {
+        out += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+    return out;
+}
+
+}  // namespace
 
 const char* provider_name(ExecutionProvider ep) noexcept {
     switch (ep) {
@@ -12,6 +26,10 @@ const char* provider_name(ExecutionProvider ep) noexcept {
         return "CPUExecutionProvider";
     case ExecutionProvider::CUDA:
         return "CUDAExecutionProvider";
+    case ExecutionProvider::MiGraphX:
+        return "MIGraphXExecutionProvider";
+    case ExecutionProvider::OpenVINO:
+        return "OpenVINOExecutionProvider";
     case ExecutionProvider::DirectML:
         return "DmlExecutionProvider";
     case ExecutionProvider::CoreML:
@@ -21,13 +39,20 @@ const char* provider_name(ExecutionProvider ep) noexcept {
 }
 
 ExecutionProvider parse_provider(const std::string& name) noexcept {
-    if (name == "CUDA" || name == "CUDAExecutionProvider") {
+    auto lower = to_lower(name);
+    if (lower == "cuda" || lower == "cudaexecutionprovider") {
         return ExecutionProvider::CUDA;
     }
-    if (name == "DirectML" || name == "DmlExecutionProvider") {
+    if (lower == "migraphx" || lower == "migraphxexecutionprovider") {
+        return ExecutionProvider::MiGraphX;
+    }
+    if (lower == "openvino" || lower == "openvinoexecutionprovider") {
+        return ExecutionProvider::OpenVINO;
+    }
+    if (lower == "directml" || lower == "dml" || lower == "dmlexecutionprovider") {
         return ExecutionProvider::DirectML;
     }
-    if (name == "CoreML" || name == "CoreMLExecutionProvider") {
+    if (lower == "coreml" || lower == "coremlexecutionprovider") {
         return ExecutionProvider::CoreML;
     }
     return ExecutionProvider::CPU;

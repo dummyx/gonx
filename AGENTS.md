@@ -10,7 +10,7 @@ Build and maintain a production-quality Godot GDExtension that integrates ONNX R
 - Build workflow for this repository: CMake + Ninja + CMake Presets.
 - Language baseline: C++20.
 - Dependency policy: pin exact revisions/tags for every third-party dependency.
-- ONNX Runtime default mode: CPU provider required; provider abstraction must allow optional CUDA, DirectML, CoreML, or other EPs later.
+- ONNX Runtime default mode: CPU provider required. Optional providers supported: CUDA, MiGraphX, OpenVINO, DirectML, CoreML.
 
 ## Stability policy
 - Prefer stable, pinned upstream revisions over floating branches.
