@@ -6,7 +6,7 @@
 namespace gonx {
 
 namespace {
-std::unique_ptr<OrtEnvironment> g_instance;
+OrtEnvironment* g_instance = nullptr;
 std::once_flag g_init_flag;
 }  // namespace
 
@@ -16,12 +16,15 @@ OrtEnvironment::OrtEnvironment()
 OrtEnvironment::~OrtEnvironment() = default;
 
 OrtEnvironment& OrtEnvironment::instance() {
-    std::call_once(g_init_flag, []() { g_instance = std::unique_ptr<OrtEnvironment>(new OrtEnvironment()); });
+    std::call_once(g_init_flag, []() { g_instance = new OrtEnvironment(); });
     return *g_instance;
 }
 
 void OrtEnvironment::shutdown() {
-    g_instance.reset();
+    // Keep the ORT environment alive until process exit. We have observed
+    // shutdown-time native failures on macOS after inference has already
+    // completed, so favor stable teardown over aggressively destroying ORT's
+    // global runtime state.
 }
 
 }  // namespace gonx

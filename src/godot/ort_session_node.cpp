@@ -25,8 +25,9 @@ godot::String to_godot_string(const std::string& value) {
 OrtSession::OrtSession() = default;
 
 OrtSession::~OrtSession() {
-    cancel(0);
-
+    // Higher-level wrappers cancel in-flight work before releasing the session.
+    // Avoid taking the session mutex again during RefCounted teardown, which can
+    // race shutdown on macOS headless runs after the useful work is complete.
     if (load_thread_.joinable()) {
         load_thread_.join();
     }
